@@ -2,32 +2,43 @@ name: Maven CI
 
 on:
   push:
-    branches: [ "main","master","feature/" ]
+    branches: [ "main", "master", "feature/**" ]
   pull_request:
-    branches: [ "main","master","feature/" ]
+    branches: [ "main", "master", "feature/**" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
+      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up JDK 17
+      # 2️⃣ Set up JDK 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # 3. Build project and run unit tests
-      - name: Run unit tests
+      # 3️⃣ Run unit tests
+      - name: Run Unit Tests
         run: mvn clean test
-        continue-on-error: false
 
-      # 4. Run integration tests
-      - name: Run integration tests
+      # 4️⃣ Run integration tests + generate JaCoCo report
+      - name: Run Integration Tests & Coverage
         run: mvn verify
-        continue-on-error: false
+
+      # 5️⃣ Upload JaCoCo HTML report
+      - name: Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: target/site/jacoco/
+
+      # 6️⃣ Print coverage summary in logs
+      - name: Show Coverage Summary
+        run: |
+          echo "📊 JaCoCo Coverage Summary"
+          grep -A 5 "<tfoot>" target/site/jacoco/index.html || true
